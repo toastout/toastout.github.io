@@ -163,6 +163,33 @@
     .toast-actions .primary:active { background: var(--accent-btn-hover-bg); }
     .toast-actions .secondary { background: var(--btn-bg); color: var(--text-color); }
     .toast-actions .secondary:active { background: var(--btn-hover-bg); }
+
+    #multi-save-list { display: none; flex-direction: column; gap: 6px; margin-top: 4px; }
+    #multi-save-list.show { display: flex; }
+    .multi-save-row {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--bg-color); border-radius: 8px; padding: 8px 10px;
+    }
+    .multi-save-row img {
+      width: 38px; height: 38px; object-fit: cover; border-radius: 5px; flex-shrink: 0;
+    }
+    .multi-save-row .name {
+      flex: 1; min-width: 0; font-size: 0.78rem; color: var(--key-color);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .multi-save-row button {
+      flex-shrink: 0; border: none; padding: 7px 12px; border-radius: 7px;
+      font-size: 0.8rem; font-weight: 600; cursor: pointer;
+      background: var(--accent-btn-bg); color: #fff;
+    }
+    .multi-save-row button:active { background: var(--accent-btn-hover-bg); }
+    .multi-save-row.saved button {
+      background: var(--btn-bg); color: var(--key-color);
+    }
+    .multi-save-hint {
+      text-align: center; font-size: 0.76rem; color: var(--key-color);
+      margin-top: 2px;
+    }
   </style>
 </head>
 <body>
@@ -194,10 +221,11 @@
         <span class="done">✅ <span class="num" id="total-count">0</span>장 세탁 완료</span>
         <button class="close-btn" id="toast-close" title="닫기">✕</button>
       </div>
-      <div class="toast-preview">
+      <div class="toast-preview" id="single-preview">
         <img id="preview-img" alt="미리보기">
         <span class="info" id="preview-name"></span>
       </div>
+      <div id="multi-save-list"></div>
       <div class="toast-actions">
         <button class="primary" id="another-btn">🖼️ 다른 그림 세탁</button>
         <button class="secondary" id="resave-btn" title="자동 다운로드가 막혔을 때">💾 다시 저장</button>
@@ -215,6 +243,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const totalCountEl = document.getElementById('total-count');
   const previewImg = document.getElementById('preview-img');
   const previewName = document.getElementById('preview-name');
+  const singlePreview = document.getElementById('single-preview');
+  const multiSaveList = document.getElementById('multi-save-list');
   const anotherBtn = document.getElementById('another-btn');
   const resaveBtn = document.getElementById('resave-btn');
   const toastClose = document.getElementById('toast-close');
@@ -333,7 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ── 한 장 처리 ──
+  // ── 한 장 처리 (워터마크 합성까지만, 저장은 호출부에서 결정) ──
   function processFile(file) {
     return new Promise(resolve => {
       const img = new Image();
@@ -351,10 +381,6 @@ document.addEventListener('DOMContentLoaded', () => {
           const baseName = file.name.split('.').slice(0, -1).join('.') || file.name;
           const fileName = `cleaned_${baseName}.jpg`;
           const url = URL.createObjectURL(blob);
-          triggerDownload(url, fileName);
-          if (lastBlobUrl) URL.revokeObjectURL(lastBlobUrl);
-          lastBlobUrl = url;
-          lastFileName = fileName;
           totalCount++;
           resolve({ url, fileName });
         }, 'image/jpeg', 0.95);
@@ -365,31 +391,78 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ── 여러 장 순차 처리 ──
+  // iOS + 2장 이상: window.open 연타가 자동 팝업으로 차단되어 마지막 한 장만 저장되는 문제가 있어
+  // 전부 처리해두고 토스트에서 한 장씩 사용자가 직접 눌러 저장하게 한다.
+  // 그 외(PC/Android, 또는 iOS라도 1장): 처리 즉시 자동 저장.
   async function handleFiles(fileList) {
     const files = Array.from(fileList).filter(f => f && f.type.startsWith('image/'));
     if (!files.length) { alert('이미지 파일만 지원돼.'); return; }
+
+    const useManualSave = isIOS() && files.length > 1;
 
     uploadBox.classList.add('busy');
     uploadText.textContent = `🫧 세탁 중... (${files.length}장)`;
     toast.classList.remove('show');
 
-    let last = null;
+    const results = [];
     for (const file of files) {
       const res = await processFile(file);
-      if (res) last = res;
-      if (files.length > 1) await new Promise(r => setTimeout(r, 200));
+      if (res) {
+        results.push(res);
+        if (!useManualSave) triggerDownload(res.url, res.fileName);
+      }
     }
 
-    if (last) {
-      previewImg.src = last.url;
-      previewName.textContent = last.fileName + (files.length > 1 ? ` 외 ${files.length - 1}장` : '');
+    if (results.length) {
+      const last = results[results.length - 1];
+      if (lastBlobUrl) URL.revokeObjectURL(lastBlobUrl);
+      lastBlobUrl = last.url;
+      lastFileName = last.fileName;
       totalCountEl.textContent = totalCount;
+
+      if (useManualSave) {
+        renderMultiSaveList(results);
+        resaveBtn.style.display = 'none';
+      } else {
+        singlePreview.style.display = 'flex';
+        multiSaveList.classList.remove('show');
+        resaveBtn.style.display = '';
+        previewImg.src = last.url;
+        previewName.textContent = last.fileName + (files.length > 1 ? ` 외 ${files.length - 1}장` : '');
+      }
       toast.classList.add('show');
     }
 
     uploadBox.classList.remove('busy');
     uploadText.textContent = '그림을 넣으면 즉시 세탁';
     fileInput.value = '';
+  }
+
+  // iOS 멀티파일 전용: 장별 저장 버튼 목록 렌더링
+  function renderMultiSaveList(results) {
+    singlePreview.style.display = 'none';
+    multiSaveList.innerHTML = '';
+    multiSaveList.classList.add('show');
+
+    const hint = document.createElement('div');
+    hint.className = 'multi-save-hint';
+    hint.textContent = '아이폰은 한 번에 여러 장이 자동 저장되지 않아 — 한 장씩 눌러서 저장해줘';
+    multiSaveList.appendChild(hint);
+
+    results.forEach((res, i) => {
+      const row = document.createElement('div');
+      row.className = 'multi-save-row';
+      row.innerHTML =
+        `<img src="${res.url}" alt="">` +
+        `<span class="name">${escapeHtml(res.fileName)}</span>` +
+        `<button type="button">💾 저장</button>`;
+      row.querySelector('button').addEventListener('click', () => {
+        triggerDownload(res.url, res.fileName);
+        row.classList.add('saved');
+        row.querySelector('button').textContent = '✓ 완료';
+      });
+      multiSaveList.appendChild(row);
+    });
   }
 
   // ── 이벤트 ──
