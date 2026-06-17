@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>🫧 포근포근 해지는 중</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0; padding: 20px;
+      background-color: #f0f7ff;
+      font-family: 'IBM Plex Sans KR', sans-serif;
+      display: flex; justify-content: center; align-items: center;
+      min-height: 100vh;
+      color: #1e3a8a;
+      position: relative;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    /* Background Bubbles */
+    .bg-bubble {
+      position: absolute; text-align: center;
+      opacity: 0.2; user-select: none; pointer-events: none;
+    }
+    .bubble-1 { top: 10%; left: 10%; font-size: 40px; }
+    .bubble-2 { bottom: 20%; right: 10%; font-size: 50px; }
+    .bubble-3 { top: 35%; right: 25%; font-size: 30px; }
+
+    .container {
+      background: #FFFFFF;
+      border-radius: 24px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+      border: 1px solid #e0f0fd;
+      width: 100%; max-width: 400px;
+      padding: 30px 40px;
+      text-align: center;
+      position: relative;
+      z-index: 10;
+      box-sizing: border-box;
+    }
+    h1 { font-size: 28px; margin: 0; font-weight: 600; color: #1e3a8a; }
+    p { font-size: 16px; color: #3b82f6; margin-top: 15px; margin-bottom: 30px; font-weight: bold;}
+    
+    .section-title { text-align: left; margin: 25px 0 15px 0; font-size: 20px; font-weight: 600; }
+    
+    .accordion {
+      background-color: #e6f4ff; color: #005a9e;
+      border-radius: 16px; padding: 16px; font-weight: bold; font-size: 18px;
+      margin: 10px 0; cursor: default; border: 1px solid #cce4f7;
+      text-align: center;
+      transition: 0.3s;
+    }
+    .accordion:hover { transform: scale(1.02); background-color: #d6ebff; }
+    
+    .panel {
+      background-color: #f7fbff;
+      border-radius: 12px;
+      margin-bottom: 5px;
+      padding: 2px 0; /* prevent margin collapse */
+    }
+    
+    .panel a {
+      display: flex; align-items: center;
+      background-color: #e6f4ff;
+      border: 1px solid #cce4f7;
+      padding: 14px; margin: 10px; border-radius: 12px;
+      text-decoration: none; color: inherit;
+      transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    .panel a:hover { 
+      transform: scale(1.03);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+      background-color: #d6ebff; 
+    }
+    .link-emoji { font-size: 24px; margin-right: 16px; margin-left: 4px; }
+    .link-text { text-align: left; display: flex; flex-direction: column; }
+    .link-title { font-size: 16px; font-weight: bold; color: #003b73; margin-bottom: 4px; }
+    .link-desc { font-size: 12px; color: #558bbd; line-height: 1.3; font-weight: 600; }
+    
+    .footer { margin-top: 30px; font-size: 16px; color: #BDBDBD; }
+    .footer a {
+      display: inline-block;
+      font-size: 20px;
+      text-decoration: none;
+      padding: 8px;
+      transition: transform 0.2s ease;
+    }
+    .footer a:hover {
+      transform: scale(1.25);
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-bubble bubble-1">🫧</div>
+  <div class="bg-bubble bubble-2">🫧</div>
+  <div class="bg-bubble bubble-3">🫧</div>
+
+  <div class="container">
+    <h1>(˘･_･˘)</h1>
+    <p>세탁을 위한 공간</p>
+    
+    <div class="section-title">🧺🫧</div>
+    
+    <div class="accordion">
+      🧺 세탁 코스 선택 ▼
+    </div>
+    
+    <div class="panel">
+      <a href="http://toastout.github.io/toast5">
+        <span class="link-emoji">🧼</span>
+        <div class="link-text">
+          <span class="link-title">1. 정밀 코스</span>
+          <span class="link-desc">워터마크 위치, 크기, 투명도 직접 설정</span>
+        </div>
+      </a>
+      
+      <a href="http://toastout.github.io/toast5q">
+        <span class="link-emoji">⚡</span>
+        <div class="link-text">
+          <span class="link-title">2. 빠른 코스</span>
+          <span class="link-desc">고정된 프리셋으로 여러 장 즉시 세탁</span>
+        </div>
+      </a>
+      
+      <a href="http://toastout.github.io/toast5s">
+        <span class="link-emoji">🎬</span>
+        <div class="link-text">
+          <span class="link-title">3. 섬세 코스</span>
+          <span class="link-desc">이미지 하단에 대화창 입히기</span>
+        </div>
+      </a>
+    </div>
+    
+    <div class="footer">
+      <a href="http://toastout.github.io/toast" title="RP를 위한 공간으로 돌아가기">🍞</a>
+    </div>
+  </div>
+</body>
+</html>
