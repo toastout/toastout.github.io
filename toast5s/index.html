@@ -554,6 +554,23 @@ document.addEventListener('DOMContentLoaded', () => {
     img.src = URL.createObjectURL(file);
   }
 
+  // iOS Safari는 <a download>가 신뢰성 있게 동작하지 않아
+  // (다운로드 대신 새 탭/공유 시트로 떨어지고, 그 결과물이 합성 전 원본처럼 보이는 경우가 있음).
+  // iOS에서는 새 탭으로 이미지를 직접 띄워 "사진에 저장" 흐름을 타게 한다.
+  function isIOS() {
+    return /iP(hone|od|ad)/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPadOS 13+ 데스크탑 UA 대응
+  }
+
+  function triggerDownload(url, filename) {
+    if (isIOS()) {
+      window.open(url, '_blank');
+    } else {
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; a.click();
+    }
+  }
+
   function saveImage() {
     if (!originalFile) return;
     const img = new Image();
@@ -571,8 +588,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (lastBlobUrl) URL.revokeObjectURL(lastBlobUrl);
         lastBlobUrl = URL.createObjectURL(blob);
         lastFileName = fn;
-        const a = document.createElement('a');
-        a.href = lastBlobUrl; a.download = fn; a.click();
+        triggerDownload(lastBlobUrl, fn);
         // 토스트
         toastImg.src = lastBlobUrl;
         toastName.textContent = fn;
@@ -640,12 +656,11 @@ document.addEventListener('DOMContentLoaded', () => {
   toastAnother.addEventListener('click', () => { toast.classList.remove('show'); fileInput.click(); });
   toastResave.addEventListener('click', () => {
     if (!lastBlobUrl) return;
-    const a = document.createElement('a');
-    a.href = lastBlobUrl; a.download = lastFileName; a.click();
+    triggerDownload(lastBlobUrl, lastFileName);
   });
 
   document.getElementById('home-link').addEventListener('click', () => { window.location.href = 'https://toastout.github.io/wash'; });
-  document.getElementById('quick-link').addEventListener('click', () => { window.location.href = 'https://toastout.github.io/toast5q'; });
+  document.getElementById('quick-link').addEventListener('click', () => { window.location.href = 'http://toastout.github.io/toast5q'; });
   document.getElementById('original-link').addEventListener('click', () => { window.location.href = 'https://toastout.github.io/toast5/'; });
 
   // --- 초기 로드 ---
