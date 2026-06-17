@@ -316,6 +316,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // iOS Safari는 <a download>가 신뢰성 있게 동작하지 않아
+  // (다운로드 대신 새 탭/공유 시트로 떨어지고, 그 결과물이 합성 전 원본처럼 보이는 경우가 있음).
+  // iOS에서는 새 탭으로 이미지를 직접 띄워 "사진에 저장" 흐름을 타게 한다.
+  function isIOS() {
+    return /iP(hone|od|ad)/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPadOS 13+ 데스크탑 UA 대응
+  }
+
+  function triggerDownload(url, filename) {
+    if (isIOS()) {
+      window.open(url, '_blank');
+    } else {
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; a.click();
+    }
+  }
+
   // ── 한 장 처리 ──
   function processFile(file) {
     return new Promise(resolve => {
@@ -334,8 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const baseName = file.name.split('.').slice(0, -1).join('.') || file.name;
           const fileName = `cleaned_${baseName}.jpg`;
           const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url; a.download = fileName; a.click();
+          triggerDownload(url, fileName);
           if (lastBlobUrl) URL.revokeObjectURL(lastBlobUrl);
           lastBlobUrl = url;
           lastFileName = fileName;
@@ -388,8 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
   anotherBtn.addEventListener('click', () => { toast.classList.remove('show'); fileInput.click(); });
   resaveBtn.addEventListener('click', () => {
     if (!lastBlobUrl) return;
-    const a = document.createElement('a');
-    a.href = lastBlobUrl; a.download = lastFileName; a.click();
+    triggerDownload(lastBlobUrl, lastFileName);
   });
   toastClose.addEventListener('click', () => toast.classList.remove('show'));
 
