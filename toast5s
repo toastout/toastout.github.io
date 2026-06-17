@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>🎬 섬세한 그림 세탁소</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #f8f9fa; --text-color: #212529; --border-color: #dee2e6;
+      --section-bg: #ffffff; --btn-bg: #e9ecef; --btn-hover-bg: #dee2e6;
+      --accent: #e07a5f; --accent-hover: #d2674c;
+      --key-color: #868e96;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0; padding: 0;
+      background-color: var(--bg-color); color: var(--text-color);
+      min-height: 100dvh;
+      display: flex; flex-direction: column;
+    }
+
+    /* ── 헤더 (sticky, safe-area) ── */
+    .header {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px;
+      padding-top: max(12px, env(safe-area-inset-top));
+      background: var(--section-bg);
+      border-bottom: 1px solid var(--border-color);
+    }
+    .header h1 { font-size: 1.05rem; margin: 0; white-space: nowrap; }
+    .header h1 .delicate-badge {
+      font-size: 0.72rem; font-weight: 800; vertical-align: middle;
+      background: var(--accent); color: #fff;
+      padding: 2px 7px; border-radius: 999px;
+    }
+    .header-btns { display: flex; gap: 8px; flex-shrink: 0; }
+    .header-btns button {
+      background: var(--btn-bg); color: var(--text-color);
+      border: none; padding: 8px 10px; border-radius: 8px;
+      font-size: 1rem; cursor: pointer; transition: background-color 0.2s;
+    }
+    .header-btns button:hover { background: var(--btn-hover-bg); }
+
+    /* ── 메인 ── */
+    .main {
+      flex: 1; display: flex; flex-direction: column;
+      padding: 16px;
+      padding-bottom: max(16px, env(safe-area-inset-bottom));
+      max-width: 600px; width: 100%; margin: 0 auto;
+    }
+
+    /* ── 업로드 (화면 가득) ── */
+    .upload-box {
+      flex: 1; min-height: 220px;
+      border: 2.5px dashed var(--border-color); border-radius: 14px;
+      cursor: pointer; transition: background-color 0.2s, border-color 0.2s;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 10px; text-align: center; padding: 24px;
+      -webkit-user-select: none; user-select: none;
+    }
+    .upload-box:hover, .upload-box.dragover { background: var(--bg-color); border-color: var(--accent); }
+    .upload-box .big { font-size: 3rem; line-height: 1; }
+    .upload-box .label { font-size: 1rem; font-weight: 600; }
+    .upload-box .hint { color: var(--key-color); font-size: 0.82rem; }
+    #file-input { display: none; }
+
+    /* ── 작업 영역 ── */
+    #workspace { display: none; flex-direction: column; gap: 14px; flex: 1; }
+    #workspace.active { display: flex; }
+
+    .preview-wrap {
+      position: relative; line-height: 0;
+      border-radius: 10px; overflow: hidden;
+      align-self: center; max-width: 100%;
+    }
+    .preview-wrap img { max-width: 100%; max-height: 50dvh; display: block; }
+    .preview-wrap canvas {
+      position: absolute; top: 0; left: 0;
+      pointer-events: none; width: 100%; height: 100%;
+    }
+
+    /* ── 컨트롤 ── */
+    .ctrl { background: var(--section-bg); border-radius: 10px; padding: 16px; }
+    .ctrl h3 { margin: 0 0 12px; font-size: 0.95rem; }
+    .ctrl + .ctrl { margin-top: 2px; }
+
+    .theme-row { display: flex; gap: 7px; }
+    .theme-row button {
+      flex: 1; padding: 10px 4px; border: 1.5px solid var(--border-color);
+      background: var(--btn-bg); color: var(--text-color);
+      border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.84rem;
+      transition: background-color 0.15s;
+    }
+    .theme-row button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    .name-row { display: flex; gap: 6px; align-items: center; margin-bottom: 10px; }
+    .name-row input {
+      flex: 1 1 auto; min-width: 0; padding: 9px 10px; font-size: 16px;
+      border: 1px solid var(--border-color); border-radius: 8px;
+      background: var(--bg-color); color: inherit;
+    }
+    .name-row > button {
+      width: 38px; flex-shrink: 0; padding: 9px;
+      font-size: 1rem; background: var(--btn-bg); color: var(--text-color);
+      border: none; border-radius: 8px; cursor: pointer;
+    }
+    .name-preset-row { display: flex; gap: 4px; flex-shrink: 0; }
+    .name-preset-row button {
+      width: 30px; height: 36px; padding: 0; font-size: 0.8rem; font-weight: 700;
+      background: var(--btn-bg); color: var(--key-color);
+      border: 1px solid var(--border-color); border-radius: 7px; cursor: pointer;
+      transition: background-color 0.15s, color 0.15s;
+    }
+    .name-preset-row button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    textarea {
+      width: 100%; padding: 10px; font-size: 16px; resize: vertical;
+      font-family: inherit; line-height: 1.6; min-height: 60px;
+      border: 1px solid var(--border-color); border-radius: 8px;
+      background: var(--bg-color); color: inherit;
+    }
+
+    .seg { display: flex; gap: 6px; }
+    .seg button {
+      flex: 1; padding: 9px; border: 1px solid var(--border-color);
+      background: var(--btn-bg); color: var(--text-color);
+      border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem;
+    }
+    .seg button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    label { font-weight: 600; font-size: 0.88rem; display: block; margin-bottom: 5px; }
+
+    .size-row { display: flex; align-items: center; gap: 6px; }
+    .size-row input {
+      flex: 1; text-align: center; padding: 8px; font-size: 16px;
+      border: 1px solid var(--border-color); border-radius: 8px;
+      background: var(--bg-color); color: inherit;
+    }
+    .size-row .step-btns { display: flex; flex-direction: column; gap: 2px; }
+    .size-row .step-btns button {
+      padding: 2px 7px; font-size: 0.78rem; height: 19px;
+      background: var(--btn-bg); color: var(--text-color);
+      border: none; border-radius: 5px; cursor: pointer;
+    }
+
+    /* ── 하단 액션 바 (고정) ── */
+    .action-bar {
+      position: sticky; bottom: 0; z-index: 90;
+      background: var(--section-bg);
+      border-top: 1px solid var(--border-color);
+      padding: 12px 16px;
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
+      display: none; gap: 8px;
+    }
+    .action-bar.active { display: flex; }
+    .action-bar button {
+      flex: 1; border: none; padding: 15px; border-radius: 10px;
+      font-size: 0.98rem; font-weight: 600; cursor: pointer;
+    }
+    .action-bar .primary { background: var(--accent); color: #fff; }
+    .action-bar .primary:active { background: var(--accent-hover); }
+    .action-bar .secondary { background: var(--btn-bg); color: var(--text-color); }
+    .action-bar .secondary:active { background: var(--btn-hover-bg); }
+
+    /* ── 토스트 (저장 결과) ── */
+    .toast {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      padding: 16px; padding-bottom: max(16px, env(safe-area-inset-bottom));
+      background: var(--section-bg);
+      border-top: 1px solid var(--border-color);
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+      transform: translateY(100%); transition: transform 0.3s ease;
+      z-index: 200;
+    }
+    .toast.show { transform: translateY(0); }
+    .toast-inner { max-width: 600px; margin: 0 auto; }
+    .toast-head {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+    }
+    .toast-head .done { font-weight: 700; font-size: 0.95rem; }
+    .toast-head .close-btn {
+      background: none; border: none; font-size: 1.2rem;
+      color: var(--key-color); cursor: pointer; padding: 4px 8px;
+    }
+    .toast-preview {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--bg-color); border-radius: 10px; padding: 10px;
+    }
+    .toast-preview img { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+    .toast-preview .info { flex: 1; min-width: 0; font-size: 0.8rem; color: var(--key-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .toast-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .toast-actions button { flex: 1; border: none; padding: 14px; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; }
+    .toast-actions .primary { background: var(--accent); color: #fff; }
+    .toast-actions .secondary { background: var(--btn-bg); color: var(--text-color); }
+  </style>
+</head>
+<body>
+  <!-- 헤더 -->
+  <div class="header">
+    <h1>🎬 <span class="delicate-badge">섬세</span> 그림 세탁소</h1>
+    <div class="header-btns">
+      <button id="home-link" title="세탁소 모음">🫧</button>
+      <button id="quick-link" title="빠른 그림 세탁소">⚡</button>
+      <button id="original-link" title="오리지널 세탁소">🧼</button>
+    </div>
+  </div>
+
+  <!-- 메인 -->
+  <div class="main">
+    <div id="upload-box" class="upload-box">
+      <span class="big">🎬</span>
+      <span class="label">그림을 넣으면 섬세 세탁</span>
+      <span class="hint">클릭 또는 드래그</span>
+    </div>
+    <input type="file" id="file-input" accept="image/*">
+
+    <div id="workspace">
+      <div class="preview-wrap" id="preview-wrap"></div>
+
+      <!-- 테마 -->
+      <div class="ctrl">
+        <h3>🎨 테마</h3>
+        <div class="theme-row" id="theme-row">
+          <button data-theme="adv_dark" class="active">ADV 다크</button>
+          <button data-theme="adv_light">ADV 라이트</button>
+          <button data-theme="rpg">RPG</button>
+        </div>
+      </div>
+
+      <!-- 대사 -->
+      <div class="ctrl">
+        <h3>💬 대사</h3>
+        <div class="name-row">
+          <input type="text" id="char-name" placeholder="이름 (선택)">
+          <div class="name-preset-row" id="name-preset-row">
+            <button data-preset="캐릭터" title="캐릭터">C</button>
+            <button data-preset="유저" title="유저">U</button>
+            <button data-preset="NPC" title="NPC">N</button>
+          </div>
+          <button id="clear-name-btn" title="이름 지우기">🗑️</button>
+        </div>
+        <textarea id="char-dialogue" rows="3" placeholder="대사를 입력해. 줄바꿈도 반영돼."></textarea>
+      </div>
+
+      <!-- 세부 -->
+      <div class="ctrl">
+        <h3>⚙️ 세부</h3>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div>
+            <label>폰트</label>
+            <div class="seg" id="font-seg">
+              <button data-font="sans" class="active">고딕</button>
+              <button data-font="serif">명조</button>
+            </div>
+          </div>
+          <div>
+            <label>글자 크기</label>
+            <div class="size-row">
+              <input type="number" id="size-input" value="34" min="16" max="80" step="2">
+              <div class="step-btns">
+                <button data-input="size-input" data-step="2">▲</button>
+                <button data-input="size-input" data-step="-2">▼</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하단 액션 바 (이미지 로드 후 표시) -->
+  <div class="action-bar" id="action-bar">
+    <button class="primary" id="save-btn">🧼 JPG 저장</button>
+    <button class="secondary" id="change-btn">🖼️ 변경</button>
+  </div>
+
+  <!-- 토스트 (저장 결과) -->
+  <div class="toast" id="toast">
+    <div class="toast-inner">
+      <div class="toast-head">
+        <span class="done">✅ 저장 완료</span>
+        <button class="close-btn" id="toast-close">✕</button>
+      </div>
+      <div class="toast-preview">
+        <img id="toast-img" alt="">
+        <span class="info" id="toast-name"></span>
+      </div>
+      <div class="toast-actions">
+        <button class="primary" id="toast-another">🖼️ 다른 이미지</button>
+        <button class="secondary" id="toast-resave">💾 다시 저장</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const uploadBox = document.getElementById('upload-box');
+  const fileInput = document.getElementById('file-input');
+  const workspace = document.getElementById('workspace');
+  const previewWrap = document.getElementById('preview-wrap');
+  const nameInput = document.getElementById('char-name');
+  const clearNameBtn = document.getElementById('clear-name-btn');
+  const namePresetRow = document.getElementById('name-preset-row');
+  const dialogueInput = document.getElementById('char-dialogue');
+  const themeRow = document.getElementById('theme-row');
+  const fontSeg = document.getElementById('font-seg');
+  const sizeInput = document.getElementById('size-input');
+  const actionBar = document.getElementById('action-bar');
+  const saveBtn = document.getElementById('save-btn');
+  const changeBtn = document.getElementById('change-btn');
+  const toast = document.getElementById('toast');
+  const toastImg = document.getElementById('toast-img');
+  const toastName = document.getElementById('toast-name');
+  const toastClose = document.getElementById('toast-close');
+  const toastAnother = document.getElementById('toast-another');
+  const toastResave = document.getElementById('toast-resave');
+
+  let originalFile = null;
+  let previewCanvas = null;
+  let lastBlobUrl = null;
+  let lastFileName = null;
+
+  let S = { name:'', dialogue:'', theme:'adv_dark', font:'sans', size:34, position:'bottom' };
+
+  const THEMES = {
+    adv_dark: {
+      fill:{type:'gradient', from:'rgba(12,16,26,0.55)', to:'rgba(12,16,26,0.80)'},
+      borders:[{color:'rgba(255,255,255,0.25)', width:0.05, inset:0}],
+      radius:0.45, text:'#f5f7fa',
+      nameBg:'#4a78b0', nameText:'#ffffff',
+      marker:true, markerColor:'#f5f7fa',
+      shadow:'rgba(0,0,0,0.5)', bracket:false
+    },
+    adv_light: {
+      fill:{type:'gradient', from:'rgba(255,255,255,0.78)', to:'rgba(245,247,250,0.85)'},
+      borders:[{color:'rgba(0,0,0,0.12)', width:0.05, inset:0}],
+      radius:0.45, text:'#2a2d32',
+      nameBg:'#d4697a', nameText:'#ffffff',
+      marker:true, markerColor:'#888e96',
+      shadow:'rgba(0,0,0,0.18)', bracket:false
+    },
+    rpg: {
+      fill:{type:'solid', color:'#4a1a24'},
+      borders:[
+        {color:'#d4b896', width:0.14, inset:0},
+        {color:'#4a1a24', width:0.06, inset:0.15},
+        {color:'#c8a87a', width:0.04, inset:0.21}
+      ],
+      radius:0.12, text:'#f0e6d6',
+      nameBg:'#6b2a38', nameText:'#f0e6d6',
+      nameBorder:'#d4b896',
+      marker:true, markerColor:'#d4b896',
+      shadow:'rgba(40,10,15,0.55)', bracket:true
+    }
+  };
+
+  // --- Helpers ---
+  async function ensureFonts() {
+    try {
+      await Promise.all([
+        document.fonts.load('400 24px "Noto Sans KR"'),
+        document.fonts.load('700 24px "Noto Sans KR"'),
+        document.fonts.load('400 24px "Noto Serif KR"'),
+        document.fonts.load('700 24px "Noto Serif KR"'),
+      ]);
+      await document.fonts.ready;
+    } catch(e){}
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    r = Math.max(0, Math.min(r, w/2, h/2));
+    ctx.beginPath();
+    ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+  }
+
+  function wrapText(ctx, text, maxW) {
+    const out = [];
+    for (const para of String(text).split('\n')) {
+      if (para === '') { out.push(''); continue; }
+      let line = '';
+      for (const ch of Array.from(para)) {
+        const test = line + ch;
+        if (line && ctx.measureText(test).width > maxW) { out.push(line); line = ch; }
+        else line = test;
+      }
+      out.push(line);
+    }
+    return out;
+  }
+
+  function drawDialogue(ctx, W, H) {
+    const name = S.name.trim();
+    let dialogue = S.dialogue;
+    if (!name && !dialogue.trim()) return;
+
+    const theme = THEMES[S.theme] || THEMES.adv_dark;
+    const ff = S.font === 'serif' ? '"Noto Serif KR", serif' : '"Noto Sans KR", sans-serif';
+
+    let displayDialogue = dialogue;
+    if (theme.bracket && dialogue.trim()) {
+      const d = dialogue.trim();
+      if (!d.startsWith('「') && !d.startsWith('『'))
+        displayDialogue = '「' + d + '」';
+    }
+
+    const ratio = W / H;
+    const scaleRef = ratio <= 0.8 ? W : (ratio >= 1.25 ? H : Math.min(W, H));
+
+    const fontSize = (S.size / 620) * scaleRef;
+    const lineHeight = fontSize * 1.6;
+    const pad = fontSize * 1.15;
+    const sideMargin = W * (ratio >= 1.25 ? 0.05 : 0.04);
+    const edgeMargin = H * (ratio >= 1.25 ? 0.05 : 0.04);
+    const boxW = W - sideMargin * 2;
+    const radius = fontSize * (theme.radius ?? 0.5);
+    const innerW = boxW - pad * 2;
+
+    ctx.font = `${fontSize}px ${ff}`;
+    const lines = displayDialogue.trim() ? wrapText(ctx, displayDialogue, innerW) : [];
+    const textH = lines.length * lineHeight;
+    const boxH = Math.max(textH + pad * 2, fontSize * 2.8);
+
+    const nfs = fontSize * 0.88;
+    let nameBoxW = 0, nameBoxH = 0;
+    if (name) {
+      ctx.font = `700 ${nfs}px ${ff}`;
+      nameBoxW = ctx.measureText(name).width + nfs * 1.5;
+      nameBoxH = nfs * 1.9;
+    }
+    const nameStick = name ? nameBoxH * 0.55 : 0;
+
+    const boxX = sideMargin;
+    let boxY = S.position === 'top' ? edgeMargin + nameStick : H - edgeMargin - boxH;
+    boxY = Math.max(nameStick + 2, boxY);
+
+    // 배경
+    ctx.save();
+    ctx.shadowColor = theme.shadow; ctx.shadowBlur = fontSize * 0.6; ctx.shadowOffsetY = fontSize * 0.18;
+    if (theme.fill.type === 'gradient') {
+      const g = ctx.createLinearGradient(0, boxY, 0, boxY + boxH);
+      g.addColorStop(0, theme.fill.from); g.addColorStop(1, theme.fill.to);
+      ctx.fillStyle = g;
+    } else ctx.fillStyle = theme.fill.color;
+    roundRect(ctx, boxX, boxY, boxW, boxH, radius); ctx.fill();
+    ctx.restore();
+
+    // 테두리
+    (theme.borders || []).forEach(b => {
+      const ins = b.inset * fontSize;
+      const lw = Math.max(1, b.width * fontSize);
+      const off = ins + lw / 2;
+      ctx.strokeStyle = b.color; ctx.lineWidth = lw;
+      roundRect(ctx, boxX+off, boxY+off, boxW-off*2, boxH-off*2, Math.max(0, radius-ins));
+      ctx.stroke();
+    });
+
+    // 네임플레이트
+    if (name) {
+      const nr = nfs * 0.35;
+      const nx = boxX + pad * 0.7;
+      const ny = boxY - nameStick;
+      ctx.save();
+      ctx.shadowColor = theme.shadow; ctx.shadowBlur = fontSize * 0.35; ctx.shadowOffsetY = fontSize * 0.08;
+      ctx.fillStyle = theme.nameBg;
+      roundRect(ctx, nx, ny, nameBoxW, nameBoxH, nr); ctx.fill();
+      ctx.restore();
+      const nbC = theme.nameBorder || theme.borders?.[0]?.color;
+      if (nbC) {
+        ctx.strokeStyle = nbC;
+        ctx.lineWidth = Math.max(1, (theme.borders?.[0]?.width || 0.04) * fontSize * 0.55);
+        roundRect(ctx, nx, ny, nameBoxW, nameBoxH, nr); ctx.stroke();
+      }
+      ctx.fillStyle = theme.nameText;
+      ctx.font = `700 ${nfs}px ${ff}`;
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      ctx.fillText(name, nx + nfs * 0.75, ny + nameBoxH / 2 + nfs * 0.03);
+    }
+
+    // 대사
+    ctx.fillStyle = theme.text;
+    ctx.font = `${fontSize}px ${ff}`;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    const ty = boxY + Math.max(pad * 0.9, (boxH - textH) / 2);
+    lines.forEach((ln, i) => ctx.fillText(ln, boxX + pad, ty + i * lineHeight));
+
+    // ▼
+    if (theme.marker && displayDialogue.trim()) {
+      const tri = fontSize * 0.48;
+      const triX = boxX + boxW - pad * 0.9;
+      const triY = boxY + boxH - pad * 0.7;
+      ctx.fillStyle = theme.markerColor || theme.text;
+      ctx.globalAlpha = 0.85;
+      ctx.beginPath();
+      ctx.moveTo(triX-tri/2, triY-tri/2);
+      ctx.lineTo(triX+tri/2, triY-tri/2);
+      ctx.lineTo(triX, triY+tri/2);
+      ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1;
+    }
+  }
+
+  // --- Preview ---
+  async function updatePreview() {
+    if (!previewCanvas) return;
+    await ensureFonts();
+    const ctx = previewCanvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+    drawDialogue(ctx, previewCanvas.width / dpr, previewCanvas.height / dpr);
+  }
+
+  function set(key, val) {
+    S[key] = val;
+    localStorage.setItem('vn_settings', JSON.stringify(S));
+    updatePreview();
+  }
+
+  function handleFile(file) {
+    if (!file || !file.type.startsWith('image/')) { alert('이미지 파일만 지원됩니다.'); return; }
+    originalFile = file;
+    toast.classList.remove('show');
+    const img = new Image();
+    img.onload = () => {
+      uploadBox.style.display = 'none';
+      workspace.classList.add('active');
+      actionBar.classList.add('active');
+
+      previewWrap.innerHTML = `<img id="preview-img" src="${img.src}">`;
+      const previewImg = document.getElementById('preview-img');
+
+      if (previewCanvas) previewCanvas.remove();
+      previewCanvas = document.createElement('canvas');
+      previewWrap.appendChild(previewCanvas);
+
+      const ro = new ResizeObserver(entries => {
+        for (const e of entries) {
+          const {width: w, height: h} = e.contentRect;
+          const dpr = window.devicePixelRatio || 1;
+          previewCanvas.style.width = w + 'px';
+          previewCanvas.style.height = h + 'px';
+          previewCanvas.width = w * dpr;
+          previewCanvas.height = h * dpr;
+          previewCanvas.getContext('2d').scale(dpr, dpr);
+          updatePreview();
+        }
+      });
+      ro.observe(previewImg);
+    };
+    img.src = URL.createObjectURL(file);
+  }
+
+  function saveImage() {
+    if (!originalFile) return;
+    const img = new Image();
+    img.onload = async () => {
+      await ensureFonts();
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth; c.height = img.naturalHeight;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      drawDialogue(ctx, c.width, c.height);
+      c.toBlob(blob => {
+        const base = (originalFile.name.split('.').slice(0,-1).join('.')) || 'scene';
+        const fn = `${base}_vn.jpg`;
+        if (lastBlobUrl) URL.revokeObjectURL(lastBlobUrl);
+        lastBlobUrl = URL.createObjectURL(blob);
+        lastFileName = fn;
+        const a = document.createElement('a');
+        a.href = lastBlobUrl; a.download = fn; a.click();
+        // 토스트
+        toastImg.src = lastBlobUrl;
+        toastName.textContent = fn;
+        actionBar.classList.remove('active');
+        toast.classList.add('show');
+      }, 'image/jpeg', 0.95);
+    };
+    img.src = URL.createObjectURL(originalFile);
+  }
+
+  // --- Events ---
+  const prevent = e => { e.preventDefault(); e.stopPropagation(); };
+  ['dragenter','dragover','dragleave','drop'].forEach(e => uploadBox.addEventListener(e, prevent));
+  ['dragenter','dragover'].forEach(e => uploadBox.addEventListener(e, () => uploadBox.classList.add('dragover')));
+  ['dragleave','drop'].forEach(e => uploadBox.addEventListener(e, () => uploadBox.classList.remove('dragover')));
+  uploadBox.addEventListener('drop', e => handleFile(e.dataTransfer.files[0]));
+  uploadBox.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+  function syncNamePresetActive() {
+    namePresetRow.querySelectorAll('button').forEach(b => {
+      b.classList.toggle('active', b.dataset.preset === S.name);
+    });
+  }
+
+  nameInput.addEventListener('input', e => { set('name', e.target.value); syncNamePresetActive(); });
+  clearNameBtn.addEventListener('click', () => { nameInput.value = ''; set('name', ''); syncNamePresetActive(); });
+  namePresetRow.addEventListener('click', e => {
+    if (e.target.tagName !== 'BUTTON') return;
+    const preset = e.target.dataset.preset;
+    const next = S.name === preset ? '' : preset; // 같은 걸 다시 누르면 해제
+    nameInput.value = next;
+    set('name', next);
+    syncNamePresetActive();
+  });
+  dialogueInput.addEventListener('input', e => set('dialogue', e.target.value));
+
+  themeRow.addEventListener('click', e => {
+    if (e.target.tagName !== 'BUTTON') return;
+    themeRow.querySelector('.active')?.classList.remove('active');
+    e.target.classList.add('active');
+    set('theme', e.target.dataset.theme);
+  });
+  fontSeg.addEventListener('click', e => {
+    if (e.target.tagName !== 'BUTTON') return;
+    fontSeg.querySelector('.active')?.classList.remove('active');
+    e.target.classList.add('active');
+    set('font', e.target.dataset.font);
+  });
+  sizeInput.addEventListener('input', e => set('size', parseInt(e.target.value) || 34));
+
+  document.querySelectorAll('.step-btns button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.input);
+      let v = parseInt(input.value) || 0;
+      v += parseInt(btn.dataset.step);
+      v = Math.max(parseInt(input.min), Math.min(parseInt(input.max), v));
+      input.value = v; input.dispatchEvent(new Event('input'));
+    });
+  });
+
+  saveBtn.addEventListener('click', () => saveImage());
+  changeBtn.addEventListener('click', () => { toast.classList.remove('show'); fileInput.click(); });
+  toastClose.addEventListener('click', () => { toast.classList.remove('show'); actionBar.classList.add('active'); });
+  toastAnother.addEventListener('click', () => { toast.classList.remove('show'); fileInput.click(); });
+  toastResave.addEventListener('click', () => {
+    if (!lastBlobUrl) return;
+    const a = document.createElement('a');
+    a.href = lastBlobUrl; a.download = lastFileName; a.click();
+  });
+
+  document.getElementById('home-link').addEventListener('click', () => { window.location.href = 'https://toastout.github.io/wash'; });
+  document.getElementById('quick-link').addEventListener('click', () => { window.location.href = 'http://toastout.github.io/toast5q'; });
+  document.getElementById('original-link').addEventListener('click', () => { window.location.href = 'https://toastout.github.io/toast5/'; });
+
+  // --- 초기 로드 ---
+  const saved = localStorage.getItem('vn_settings');
+  if (saved) {
+    try { const p = JSON.parse(saved); if (p) S = { ...S, ...p }; }
+    catch(e){ localStorage.removeItem('vn_settings'); }
+  }
+  S.name = ''; S.dialogue = '';
+  syncNamePresetActive();
+  sizeInput.value = S.size;
+  themeRow.querySelector('.active')?.classList.remove('active');
+  (themeRow.querySelector(`[data-theme="${S.theme}"]`) || themeRow.querySelector('[data-theme="adv_dark"]')).classList.add('active');
+  fontSeg.querySelector('.active')?.classList.remove('active');
+  (fontSeg.querySelector(`[data-font="${S.font}"]`) || fontSeg.querySelector('[data-font="sans"]')).classList.add('active');
+  S.position = 'bottom';
+});
+</script>
+</body>
+</html>
