@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>⚡ 빠른 그림 세탁소</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text x='0' y='13' font-size='13'>⚡</text></svg>" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <style>
     :root {
@@ -286,11 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
     wmSummary.innerHTML =
       `<div class="summary-text">적용 설정 · <b>"${escapeHtml(settings.text)}"</b> · <b>${POSITION_LABEL[settings.position]}</b>` +
       ` · 크기 <b>${settings.size}</b> · 투명도 <b>${settings.opacity}%</b></div>` +
-      `<a href="#" id="go-full" class="full-link-chip">정밀 버전에서 직접 설정 <span class="arrow">→</span></a>`;
-    document.getElementById('go-full')?.addEventListener('click', e => {
-      e.preventDefault();
-      window.location.href = "https://toastout.github.io/toast5/";
-    });
+      `<a href="https://toastout.github.io/toast5/" id="go-full" class="full-link-chip">정밀 버전에서 직접 설정 <span class="arrow">→</span></a>`;
   }
 
   function escapeHtml(s) {
@@ -319,10 +316,14 @@ document.addEventListener('DOMContentLoaded', () => {
       ctx.rotate(-Math.PI / 12);
       const textWidth = ctx.measureText(settings.text).width;
       const effectiveSpacingX = Math.max(textWidth, dynamicSpacing * 1.8);
-      const effectiveSpacingY = dynamicSpacing;
-      for (let y = -height; y < height * 2; y += effectiveSpacingY)
-        for (let x = -width; x < width * 2; x += effectiveSpacingX)
+      const effectiveSpacingY = Math.max(1, dynamicSpacing);
+      let drawCount = 0;
+      const MAX_DRAWS = 20000; // 어떤 경우에도 탭이 멈추지 않도록 상한
+      for (let y = -height; y < height * 2 && drawCount < MAX_DRAWS; y += effectiveSpacingY)
+        for (let x = -width; x < width * 2 && drawCount < MAX_DRAWS; x += effectiveSpacingX) {
           ctx.fillText(settings.text, x, y);
+          drawCount++;
+        }
       ctx.restore();
     } else {
       // margin도 이미지 크기에 비례 (최소 8px)
@@ -481,8 +482,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   toastClose.addEventListener('click', () => toast.classList.remove('show'));
 
-  homeLinkBtn.addEventListener('click', () => { window.location.href = "https://toastout.github.io/wash"; });
-  delicateLinkBtn.addEventListener('click', () => { window.location.href = "https://toastout.github.io/toast5s"; });
+  homeLinkBtn.addEventListener('click', () => { window.location.href = "https://toastout.github.io/wash/"; });
+  delicateLinkBtn.addEventListener('click', () => { window.location.href = "https://toastout.github.io/toast5s/"; });
   fullLinkBtn.addEventListener('click', () => { window.location.href = "https://toastout.github.io/toast5/"; });
 
   // ── 초기 로드 ──
